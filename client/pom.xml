@@ -15,6 +15,7 @@
     <description>Client side of the GraphQL Implementation</description>
     <modules>
         <module>api</module>
+        <module>client-all</module>
         <module>implementation</module>
         <module>generator</module>
         <module>generator-test</module>
