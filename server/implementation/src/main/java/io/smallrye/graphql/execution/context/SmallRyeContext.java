@@ -50,6 +50,10 @@ public class SmallRyeContext implements Context {
         current.set(registry);
     }
 
+    public static void setContext(SmallRyeContext context) {
+        current.set(context);
+    }
+
     public static void setSchema(Schema schema) {
         SmallRyeContext.schema = schema;
     }

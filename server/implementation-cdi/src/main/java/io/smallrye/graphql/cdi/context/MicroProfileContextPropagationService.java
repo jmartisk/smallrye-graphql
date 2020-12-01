@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import org.eclipse.microprofile.context.ThreadContext;
 
+import io.smallrye.graphql.execution.context.SmallRyeContextThreadContextProvider;
 import io.smallrye.graphql.spi.ContextPropagationService;
 
 /**
@@ -17,7 +18,9 @@ public class MicroProfileContextPropagationService implements ContextPropagation
 
     public MicroProfileContextPropagationService() {
         ctx = ThreadContext.builder()
+                //                .propagated(ThreadContext.CDI, SmallRyeContextThreadContextProvider.TYPE)
                 .propagated(ThreadContext.CDI)
+                .cleared(SmallRyeContextThreadContextProvider.TYPE)
                 .build();
     }
 
