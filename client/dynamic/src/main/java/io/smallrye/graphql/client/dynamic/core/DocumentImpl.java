@@ -12,6 +12,8 @@ public class DocumentImpl extends AbstractDocument {
             builder.append(operation.build());
         }
 
-        return builder.toString();
+        // FIXME PART 2 - what is the correct format? this works with SmallRye but fails the TCK
+        return "{" + builder.toString() + "}";
+        //        return builder.toString();
     }
 }

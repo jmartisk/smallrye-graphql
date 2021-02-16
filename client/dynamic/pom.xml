@@ -10,19 +10,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>smallrye-graphql-client-dynamic</artifactId>
-
-    <properties>
-    </properties>
+    <name>SmallRye: GraphQL Client :: Dynamic</name>
 
     <dependencies>
         <dependency>
             <groupId>org.eclipse.microprofile.graphql</groupId>
             <artifactId>microprofile-graphql-client-api</artifactId>
-            <!-- TODO: version should come from root pom -->
-            <version>1.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
@@ -33,7 +33,18 @@
             <artifactId>jakarta.json.bind-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse</groupId>
+            <artifactId>yasson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>mutiny</artifactId>
+        </dependency>
     </dependencies>
-
 
 </project>

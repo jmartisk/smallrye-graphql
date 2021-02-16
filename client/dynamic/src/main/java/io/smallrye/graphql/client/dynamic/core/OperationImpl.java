@@ -8,18 +8,21 @@ public class OperationImpl extends AbstractOperation {
     public String build() {
         StringBuilder builder = new StringBuilder();
 
-        switch (this.getType()) {
-            case QUERY:
-                builder.append("query");
-                break;
-            case MUTATION:
-                builder.append("mutation");
-                break;
-            default:
-                throw new BuildException("Operation type must be one of QUERY, MUTATION or SUBSCRIPTION");
-        }
-
-        builder.append(" ");
+        // FIXME part1 - sr-graphql does not accept it - this way it works with SmallRye but fails the TCK
+        /*
+         * switch (this.getType()) {
+         * case QUERY:
+         * builder.append("query");
+         * break;
+         * case MUTATION:
+         * builder.append("mutation");
+         * break;
+         * default:
+         * throw new BuildException("Operation type must be one of QUERY, MUTATION or SUBSCRIPTION");
+         * }
+         * 
+         * builder.append(" ");
+         */
         builder.append(this.getName());
 
         if (!this.getVariables().isEmpty()) {

@@ -17,22 +17,15 @@
         <dependency>
             <groupId>io.smallrye</groupId>
             <artifactId>smallrye-graphql-client-dynamic</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.microprofile.graphql</groupId>
             <artifactId>microprofile-graphql-client-api</artifactId>
-            <!-- TODO: version should come from root pom -->
-            <version>1.1-SNAPSHOT</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.eclipse.microprofile.graphql</groupId>
             <artifactId>microprofile-graphql-client-tck</artifactId>
-            <!-- TODO version should come from root pom -->
-            <version>1.1-SNAPSHOT</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
