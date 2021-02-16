@@ -20,5 +20,6 @@
         <module>generator-test</module>
         <module>tck</module>
         <module>all</module>
+        <module>dynamic</module>
     </modules>
 </project>
