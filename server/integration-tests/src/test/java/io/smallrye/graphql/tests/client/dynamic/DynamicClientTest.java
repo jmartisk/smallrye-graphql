@@ -1,6 +1,7 @@
 package io.smallrye.graphql.tests.client.dynamic;
 
 import static org.eclipse.microprofile.graphql.client.core.Argument.arg;
+import static org.eclipse.microprofile.graphql.client.core.Argument.args;
 import static org.eclipse.microprofile.graphql.client.core.Document.document;
 import static org.eclipse.microprofile.graphql.client.core.Field.field;
 import static org.eclipse.microprofile.graphql.client.core.Operation.operation;
@@ -8,14 +9,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.json.JsonObject;
 
 import org.eclipse.microprofile.graphql.client.Response;
-import org.eclipse.microprofile.graphql.client.core.Argument;
 import org.eclipse.microprofile.graphql.client.core.Document;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
@@ -106,12 +104,10 @@ public class DynamicClientTest {
 
     @Test
     public void testSimpleQueryWithArgument() throws ExecutionException, InterruptedException {
-        List<Argument> args = new ArrayList<>();
-        args.add(arg("number", 12));
         Document document = document(
                 operation("MyAwesomeQuery",
                         field("queryWithArgument",
-                                args,
+                                args(arg("number", 12)),
                                 field("integer"))));
         // TODO: what is the spec-compliant way to build a Request object?
         Response response = client.executeSync(new RequestImpl(document.build()));
