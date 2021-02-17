@@ -35,6 +35,7 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
 
     public Response executeSync(Request request) throws ExecutionException, InterruptedException {
         HttpResponse<Buffer> result = webClient.postAbs(url)
+                .putHeader("Content-Type", "application/json")
                 .sendBuffer(Buffer.buffer(request.toJson()))
                 .toCompletionStage()
                 .toCompletableFuture()
@@ -45,6 +46,7 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
     public Uni<Response> executeAsync(Request request) {
         return Uni.createFrom().completionStage(
                 webClient.postAbs(url)
+                        .putHeader("Content-Type", "application/json")
                         .sendBuffer(Buffer.buffer(request.toJson()))
                         .toCompletionStage())
                 .map(response -> readFrom(response.body()));
@@ -85,6 +87,7 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
         return new ResponseImpl(data, errors);
     }
 
+    // TODO: defining custom HTTP headers, etc
     public static class Builder {
 
         private Vertx vertx;
