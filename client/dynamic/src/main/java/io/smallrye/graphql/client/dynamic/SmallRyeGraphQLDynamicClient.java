@@ -17,8 +17,10 @@ import org.eclipse.microprofile.graphql.client.Request;
 import org.eclipse.microprofile.graphql.client.Response;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -27,15 +29,17 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
 
     private final WebClient webClient;
     private final String url;
+    private final MultiMap headers;
 
-    SmallRyeGraphQLDynamicClient(WebClientOptions options, Vertx vertx, String url) {
-        webClient = WebClient.create(vertx, options);
+    SmallRyeGraphQLDynamicClient(WebClientOptions options, Vertx vertx, String url, MultiMap headers) {
+        this.webClient = WebClient.create(vertx, options);
+        this.headers = headers;
         this.url = url;
     }
 
     public Response executeSync(Request request) throws ExecutionException, InterruptedException {
         HttpResponse<Buffer> result = webClient.postAbs(url)
-                .putHeader("Content-Type", "application/json")
+                .putHeaders(headers)
                 .sendBuffer(Buffer.buffer(request.toJson()))
                 .toCompletionStage()
                 .toCompletableFuture()
@@ -46,7 +50,7 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
     public Uni<Response> executeAsync(Request request) {
         return Uni.createFrom().completionStage(
                 webClient.postAbs(url)
-                        .putHeader("Content-Type", "application/json")
+                        .putHeaders(headers)
                         .sendBuffer(Buffer.buffer(request.toJson()))
                         .toCompletionStage())
                 .map(response -> readFrom(response.body()));
@@ -60,13 +64,19 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
     private ResponseImpl readFrom(Buffer input) {
         // FIXME: is there a more performant way to read the input?
         JsonReader jsonReader = Json.createReader(new StringReader(input.toString()));
-        JsonObject jsonResponse = jsonReader.readObject();
+        JsonObject jsonResponse;
+        try {
+            jsonResponse = jsonReader.readObject();
+        } catch (Exception e) {
+            throw SmallRyeGraphQLDynamicClientMessages.msg.cannotParseResponse(input.toString());
+        }
+
         JsonObject data = null;
         if (jsonResponse.containsKey("data")) {
             if (!jsonResponse.isNull("data")) {
                 data = jsonResponse.getJsonObject("data");
             } else {
-                //                log.warn("No data in GraphQLResponse");
+                SmallRyeGraphQLDynamicClientLogging.log.noDataInResponse();
             }
         }
 
@@ -81,20 +91,30 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
             try {
                 jsonb.close();
             } catch (Exception ignore) {
-            } // Ugly!!!
+            }
         }
 
         return new ResponseImpl(data, errors);
     }
 
-    // TODO: defining custom HTTP headers, etc
     public static class Builder {
 
         private Vertx vertx;
         private String url;
+        private MultiMap headersMap;
+
+        public Builder() {
+            headersMap = new HeadersMultiMap();
+            headersMap.set("Content-Type", "application/json");
+        }
 
         public Builder vertx(Vertx vertx) {
             this.vertx = vertx;
+            return this;
+        }
+
+        public Builder header(String name, String value) {
+            headersMap.set(name, value);
             return this;
         }
 
@@ -109,7 +129,7 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
                 throw new IllegalArgumentException("URL is required");
             }
             Vertx toUseVertx = vertx != null ? vertx : Vertx.vertx();
-            return new SmallRyeGraphQLDynamicClient(options, toUseVertx, url);
+            return new SmallRyeGraphQLDynamicClient(options, toUseVertx, url, headersMap);
         }
 
     }
