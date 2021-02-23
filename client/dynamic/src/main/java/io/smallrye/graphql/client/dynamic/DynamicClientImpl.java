@@ -15,6 +15,7 @@ import javax.json.bind.JsonbBuilder;
 import org.eclipse.microprofile.graphql.client.Error;
 import org.eclipse.microprofile.graphql.client.Request;
 import org.eclipse.microprofile.graphql.client.Response;
+import org.eclipse.microprofile.graphql.client.core.Document;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.MultiMap;
@@ -25,18 +26,24 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
-public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
+public class DynamicClientImpl implements DynamicGraphQLClient {
 
     private final WebClient webClient;
     private final String url;
     private final MultiMap headers;
 
-    SmallRyeGraphQLDynamicClient(WebClientOptions options, Vertx vertx, String url, MultiMap headers) {
+    DynamicClientImpl(WebClientOptions options, Vertx vertx, String url, MultiMap headers) {
         this.webClient = WebClient.create(vertx, options);
         this.headers = headers;
         this.url = url;
     }
 
+    @Override
+    public Response executeSync(Document document) throws ExecutionException, InterruptedException {
+        return executeSync(buildRequest(document));
+    }
+
+    @Override
     public Response executeSync(Request request) throws ExecutionException, InterruptedException {
         HttpResponse<Buffer> result = webClient.postAbs(url)
                 .putHeaders(headers)
@@ -47,6 +54,12 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
         return readFrom(result.body());
     }
 
+    @Override
+    public Uni<Response> executeAsync(Document document) {
+        return executeAsync(buildRequest(document));
+    }
+
+    @Override
     public Uni<Response> executeAsync(Request request) {
         return Uni.createFrom().completionStage(
                 webClient.postAbs(url)
@@ -54,6 +67,10 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
                         .sendBuffer(Buffer.buffer(request.toJson()))
                         .toCompletionStage())
                 .map(response -> readFrom(response.body()));
+    }
+
+    public Request buildRequest(Document document) {
+        return new RequestImpl(document.build());
     }
 
     @Override
@@ -101,7 +118,7 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
 
         private Vertx vertx;
         private String url;
-        private MultiMap headersMap;
+        private final MultiMap headersMap;
 
         public Builder() {
             headersMap = new HeadersMultiMap();
@@ -123,13 +140,13 @@ public class SmallRyeGraphQLDynamicClient implements AutoCloseable {
             return this;
         }
 
-        public SmallRyeGraphQLDynamicClient build() {
+        public DynamicClientImpl build() {
             WebClientOptions options = new WebClientOptions();
             if (url == null) {
                 throw new IllegalArgumentException("URL is required");
             }
             Vertx toUseVertx = vertx != null ? vertx : Vertx.vertx();
-            return new SmallRyeGraphQLDynamicClient(options, toUseVertx, url, headersMap);
+            return new DynamicClientImpl(options, toUseVertx, url, headersMap);
         }
 
     }

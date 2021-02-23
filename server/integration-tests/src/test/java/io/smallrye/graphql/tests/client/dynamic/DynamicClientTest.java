@@ -27,8 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.smallrye.graphql.client.dynamic.RequestImpl;
-import io.smallrye.graphql.client.dynamic.SmallRyeGraphQLDynamicClient;
+import io.smallrye.graphql.client.dynamic.DynamicClientImpl;
 
 @RunWith(Arquillian.class)
 @RunAsClient
@@ -44,11 +43,11 @@ public class DynamicClientTest {
     @ArquillianResource
     URL testingURL;
 
-    private static SmallRyeGraphQLDynamicClient client;
+    private static DynamicClientImpl client;
 
     @Before
     public void prepare() {
-        client = new SmallRyeGraphQLDynamicClient.Builder()
+        client = new DynamicClientImpl.Builder()
                 .url(testingURL.toString() + "graphql")
                 .build();
     }
@@ -65,8 +64,7 @@ public class DynamicClientTest {
                         field("simple",
                                 field("string"),
                                 field("integer"))));
-        // TODO: what is the spec-compliant way to build a Request object?
-        JsonObject data = client.executeSync(new RequestImpl(document.build())).getData();
+        JsonObject data = client.executeSync(document).getData();
         assertEquals("asdf", data.getJsonObject("simple").getString("string"));
         assertEquals(30, data.getJsonObject("simple").getInt("integer"));
     }
@@ -81,8 +79,7 @@ public class DynamicClientTest {
                         field("simple2",
                                 field("string"),
                                 field("integer"))));
-        // TODO: what is the spec-compliant way to build a Request object?
-        JsonObject data = client.executeSync(new RequestImpl(document.build())).getData();
+        JsonObject data = client.executeSync(document).getData();
         assertEquals("asdf", data.getJsonObject("simple").getString("string"));
         assertEquals(30, data.getJsonObject("simple").getInt("integer"));
         assertEquals("asdfgh", data.getJsonObject("simple2").getString("string"));
@@ -96,7 +93,7 @@ public class DynamicClientTest {
                         field("simple",
                                 field("string"),
                                 field("integer"))));
-        JsonObject data = client.executeAsync(new RequestImpl(document.build()))
+        JsonObject data = client.executeAsync(document)
                 .await().atMost(Duration.ofSeconds(30)).getData();
         assertEquals("asdf", data.getJsonObject("simple").getString("string"));
         assertEquals(30, data.getJsonObject("simple").getInt("integer"));
@@ -109,8 +106,7 @@ public class DynamicClientTest {
                         field("queryWithArgument",
                                 args(arg("number", 12)),
                                 field("integer"))));
-        // TODO: what is the spec-compliant way to build a Request object?
-        Response response = client.executeSync(new RequestImpl(document.build()));
+        Response response = client.executeSync(document);
         JsonObject data = response.getData();
         assertEquals(12, data.getJsonObject("queryWithArgument").getInt("integer"));
     }
