@@ -21,5 +21,6 @@
         <module>tck</module>
         <module>all</module>
         <module>dynamic</module>
+        <module>dynamic-api</module>
     </modules>
 </project>

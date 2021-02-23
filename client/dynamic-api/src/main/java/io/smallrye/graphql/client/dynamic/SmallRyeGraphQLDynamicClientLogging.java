@@ -13,8 +13,6 @@ public interface SmallRyeGraphQLDynamicClientLogging {
     SmallRyeGraphQLDynamicClientLogging log = Logger.getMessageLogger(SmallRyeGraphQLDynamicClientLogging.class,
             SmallRyeGraphQLDynamicClientLogging.class.getPackage().getName());
 
-    /* 10000-10999: bootstrap related logs */
-
     @LogMessage(level = Logger.Level.WARN)
     @Message(id = 30000, value = "Received response containing no data")
     void noDataInResponse();

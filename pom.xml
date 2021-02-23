@@ -259,6 +259,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>smallrye-graphql-client-dynamic-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>smallrye-graphql-client-dynamic</artifactId>
                 <version>${project.version}</version>
             </dependency>
