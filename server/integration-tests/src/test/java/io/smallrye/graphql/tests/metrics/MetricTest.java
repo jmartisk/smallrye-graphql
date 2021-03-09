@@ -33,6 +33,8 @@ public class MetricTest {
                 .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml")
                 .addAsResource(new StringAsset("smallrye.graphql.metrics.enabled=true"),
                         "META-INF/microprofile-config.properties")
+                .addAsResource(new StringAsset("io.smallrye.graphql.cdi.metrics.MPMetricsService"),
+                        "META-INF/services/io.smallrye.graphql.spi.EventingService")
                 .addClasses(DummyGraphQLApi.class, Foo.class);
     }
 
