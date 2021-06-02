@@ -35,6 +35,8 @@ public class ExecutionResponse {
     private final ExecutionErrorsService errorsService;
 
     public ExecutionResponse(ExecutionResult executionResult, Config config) {
+        System.out.println("BUILDING executionResponse from result with data " + executionResult.getData() + " and errors "
+                + executionResult.getErrors());
         this.config = config;
         this.executionResult = executionResult;
         this.errorsService = new ExecutionErrorsService(config);

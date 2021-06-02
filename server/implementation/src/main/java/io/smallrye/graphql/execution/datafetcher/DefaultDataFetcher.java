@@ -32,11 +32,14 @@ public class DefaultDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
     @Override
     public <T> T invokeAndTransform(DataFetchingEnvironment dfe, DataFetcherResult.Builder<Object> resultBuilder,
             Object[] transformedArguments) throws Exception {
+        System.out.println("default fetcher called with resultBuilder " + resultBuilder.hashCode());
         SmallRyeContext context = ((GraphQLContext) dfe.getContext()).get("context");
         try {
             SmallRyeContext.setContext(context);
             Object resultFromMethodCall = reflectionHelper.invoke(transformedArguments);
             Object resultFromTransform = fieldHelper.transformResponse(resultFromMethodCall);
+            System.out.println("**** RESULT FROM TRANSFORM = " + resultFromTransform);
+            new Exception().printStackTrace();
             resultBuilder.data(resultFromTransform);
             return (T) resultBuilder.build();
         } finally {

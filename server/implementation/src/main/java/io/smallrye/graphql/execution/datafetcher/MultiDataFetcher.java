@@ -37,6 +37,8 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
             DataFetchingEnvironment dfe,
             DataFetcherResult.Builder<Object> resultBuilder,
             Object[] transformedArguments) throws Exception {
+        System.out.println("Multi fetcher called with resultBuilder " + resultBuilder.hashCode());
+        new Exception().printStackTrace();
         SmallRyeContext context = ((GraphQLContext) dfe.getContext()).get("context");
         try {
             SmallRyeContext.setContext(context);
@@ -45,6 +47,8 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
             return (O) multi
 
                     .onItem().transform((t) -> {
+                        //                        final DataFetcherResult.Builder<Object> resultBuilder = DataFetcherResult.newResult()
+                        //                                .localContext(dfe.getContext());
                         try {
                             Object resultFromTransform = fieldHelper.transformResponse(t);
                             resultBuilder.data(resultFromTransform);
@@ -59,6 +63,13 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
 
                     .onFailure().recoverWithItem(new Function<Throwable, O>() {
                         public O apply(Throwable throwable) {
+                            //                            final DataFetcherResult.Builder<Object> resultBuilder = DataFetcherResult.newResult()
+                            //                                    .localContext(dfe.getContext());
+                            System.out.println("RECOVERING FROM " + throwable);
+                            System.out.println("data before recovering =" + resultBuilder.build().getData());
+                            //                            resultBuilder.
+                            resultBuilder.data(null);
+                            resultBuilder.
                             eventEmitter.fireOnDataFetchError(dfe.getExecutionId().toString(), throwable);
                             if (throwable instanceof GraphQLException) {
                                 GraphQLException graphQLException = (GraphQLException) throwable;
@@ -67,6 +78,8 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
                                 DataFetcherException dataFetcherException = SmallRyeGraphQLServerMessages.msg
                                         .dataFetcherException(operation, throwable);
                                 errorResultHelper.appendException(resultBuilder, dfe, dataFetcherException);
+                                System.out.println("data after recovering =" + resultBuilder.build().getData());
+                                System.out.println("errors after recovering = " + resultBuilder.build().getErrors());
                             } else if (throwable instanceof Error) {
                                 errorResultHelper.appendException(resultBuilder, dfe, throwable);
                             }
@@ -82,6 +95,7 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
     @Override
     @SuppressWarnings("unchecked")
     protected <O> O invokeFailure(DataFetcherResult.Builder<Object> resultBuilder) {
+        System.out.println("Invoke failure, errors = " + resultBuilder.build().getErrors());
         return (O) Multi.createFrom()
                 .item(resultBuilder::build);
     }

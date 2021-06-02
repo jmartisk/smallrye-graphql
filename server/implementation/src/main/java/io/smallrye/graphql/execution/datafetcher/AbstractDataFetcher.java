@@ -52,23 +52,29 @@ public abstract class AbstractDataFetcher<K, T> implements DataFetcher<T>, Batch
         final DataFetcherResult.Builder<Object> resultBuilder = DataFetcherResult.newResult().localContext(dfe.getContext());
 
         try {
+            System.out.println("0");
             Object[] transformedArguments = argumentHelper.getArguments(dfe);
 
             return invokeAndTransform(dfe, resultBuilder, transformedArguments);
         } catch (AbstractDataFetcherException abstractDataFetcherException) {
+            System.out.println("1");
             //Arguments or result couldn't be transformed
             abstractDataFetcherException.appendDataFetcherResult(resultBuilder, dfe);
             eventEmitter.fireOnDataFetchError(dfe.getExecutionId().toString(), abstractDataFetcherException);
         } catch (GraphQLException graphQLException) {
+            System.out.println("2");
             errorResultHelper.appendPartialResult(resultBuilder, dfe, graphQLException);
             eventEmitter.fireOnDataFetchError(dfe.getExecutionId().toString(), graphQLException);
         } catch (Throwable ex) {
+            System.out.println("3");
             eventEmitter.fireOnDataFetchError(dfe.getExecutionId().toString(), ex);
             throw ex;
         } finally {
+            System.out.println("4");
             eventEmitter.fireAfterDataFetch(context);
         }
 
+        System.out.println("5");
         return invokeFailure(resultBuilder);
     }
 
