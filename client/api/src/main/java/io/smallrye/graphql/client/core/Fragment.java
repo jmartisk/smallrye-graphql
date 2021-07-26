@@ -5,6 +5,10 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
+/**
+ * Represents a named fragment definition in a GraphQL document. Such definition consists of a name,
+ * target type, and a set of fields.
+ */
 public interface Fragment extends FragmentOrOperation {
     /*
      * Static factory methods

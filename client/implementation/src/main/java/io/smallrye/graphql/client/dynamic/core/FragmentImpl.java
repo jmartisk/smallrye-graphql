@@ -1,6 +1,6 @@
 package io.smallrye.graphql.client.dynamic.core;
 
-import io.smallrye.graphql.client.core.Field;
+import io.smallrye.graphql.client.core.FieldOrFragment;
 import io.smallrye.graphql.client.core.exceptions.BuildException;
 
 public class FragmentImpl extends AbstractFragment {
@@ -10,9 +10,9 @@ public class FragmentImpl extends AbstractFragment {
         StringBuilder builder = new StringBuilder();
         builder.append("fragment  ").append(getName()).append(" on ").append(getTargetType()).append(" {");
 
-        Field[] fields = this.getFields().toArray(new Field[0]);
+        FieldOrFragment[] fields = this.getFields().toArray(new FieldOrFragment[0]);
         for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
+            FieldOrFragment field = fields[i];
             builder.append(field.build());
             if (i < fields.length - 1) {
                 builder.append(" ");
