@@ -1,5 +1,6 @@
 package io.smallrye.graphql.client.dynamic.core;
 
+import io.smallrye.graphql.client.core.Field;
 import io.smallrye.graphql.client.core.exceptions.BuildException;
 
 public class OperationImpl extends AbstractOperation {
@@ -59,9 +60,9 @@ public class OperationImpl extends AbstractOperation {
     private void _buildFields(StringBuilder builder) {
         builder.append("{");
 
-        FieldImpl[] rootFields = this.getFields().toArray(new FieldImpl[0]);
+        Field[] rootFields = this.getFields().toArray(new Field[0]);
         for (int i = 0; i < rootFields.length; i++) {
-            FieldImpl rootField = rootFields[i];
+            Field rootField = rootFields[i];
             builder.append(rootField.build());
             if (i < rootFields.length - 1) {
                 builder.append(" ");

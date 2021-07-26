@@ -1,5 +1,7 @@
 package io.smallrye.graphql.client.dynamic.core;
 
+import io.smallrye.graphql.client.core.Field;
+
 public class FieldImpl extends AbstractField {
     // TODO: Use StringJoiner
     @Override
@@ -45,9 +47,9 @@ public class FieldImpl extends AbstractField {
     private String _buildFields() {
         StringBuilder builder = new StringBuilder();
 
-        FieldImpl[] fields = this.getFields().toArray(new FieldImpl[0]);
+        Field[] fields = this.getFields().toArray(new Field[0]);
         for (int i = 0; i < fields.length; i++) {
-            FieldImpl field = fields[i];
+            Field field = fields[i];
             builder.append(field.build());
             if (i < fields.length - 1) {
                 builder.append(" ");
