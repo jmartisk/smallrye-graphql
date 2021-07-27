@@ -5,6 +5,10 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
+/**
+ * Represents an inline fragment in a GraphQL document. This can be used
+ * anywhere where a field is expected (thus it implements `FieldOrFragment`).
+ */
 public interface InlineFragment extends FieldOrFragment {
 
     static InlineFragment on(String type, Field... fields) {
