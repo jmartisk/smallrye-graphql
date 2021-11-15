@@ -19,13 +19,14 @@ import io.smallrye.graphql.client.GraphQLError;
  * {@link GraphQLError}s instead.
  * There can be the paradox situation that there is a <code>value</code> <em>as well as</em> errors,
  * but this is what a GraphQL service could theoretically return!
+ * It is also possible that there will be neither a value, nor an error.
  */
 public final class ErrorOr<T> {
     private final T value;
     private final List<GraphQLError> errors;
 
     public static <T> ErrorOr<T> of(T value) {
-        return new ErrorOr<>(requireNonNull(value, "value must not be null"), null);
+        return new ErrorOr<>(value, null);
     }
 
     public static <T> ErrorOr<T> ofErrors(List<GraphQLError> errors) {

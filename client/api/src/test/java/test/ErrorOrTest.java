@@ -57,13 +57,6 @@ class ErrorOrTest {
 
     @Nested
     class Creation {
-        @Test
-        void shouldFailToCreateWithNullValue() {
-            Throwable throwable = catchThrowable(() -> ErrorOr.of(null));
-
-            then(throwable).isInstanceOf(NullPointerException.class)
-                    .hasMessage("value must not be null");
-        }
 
         @Test
         void shouldFailToCreateWithNullErrors() {
