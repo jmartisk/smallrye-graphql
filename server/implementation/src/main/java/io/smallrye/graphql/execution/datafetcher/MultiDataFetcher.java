@@ -34,7 +34,7 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
     @SuppressWarnings("unchecked")
     protected <O> O invokeAndTransform(
             DataFetchingEnvironment dfe,
-            DataFetcherResult.Builder<Object> resultBuilder,
+            DataFetcherResult.Builder<Object> UNUSED,
             Object[] transformedArguments) throws Exception {
         SmallRyeContext context = ((GraphQLContext) dfe.getContext()).get("context");
         try {
@@ -44,6 +44,8 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
             return (O) multi
 
                     .onItem().transform((t) -> {
+                        DataFetcherResult.Builder<Object> resultBuilder = DataFetcherResult.newResult();
+                        resultBuilder.localContext(context);
                         try {
                             Object resultFromTransform = fieldHelper.transformResponse(t);
                             resultBuilder.data(resultFromTransform);
@@ -58,17 +60,26 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
 
                     .onFailure().recoverWithItem(new Function<Throwable, O>() {
                         public O apply(Throwable throwable) {
+                            System.out.println("APPLY THROWABLE: " + throwable.getMessage());
+                            DataFetcherResult.Builder<Object> resultBuilder = DataFetcherResult.newResult();
+                            resultBuilder.localContext(context);
                             eventEmitter.fireOnDataFetchError(dfe.getExecutionId().toString(), throwable);
                             if (throwable instanceof GraphQLException) {
                                 GraphQLException graphQLException = (GraphQLException) throwable;
                                 errorResultHelper.appendPartialResult(resultBuilder, dfe, graphQLException);
+                                errorResultHelper.appendPartialResult(UNUSED, dfe, graphQLException);
                             } else if (throwable instanceof Exception) {
                                 DataFetcherException dataFetcherException = SmallRyeGraphQLServerMessages.msg
                                         .dataFetcherException(operation, throwable);
+                                errorResultHelper.appendException(UNUSED, dfe, dataFetcherException);
                                 errorResultHelper.appendException(resultBuilder, dfe, dataFetcherException);
                             } else if (throwable instanceof Error) {
+                                errorResultHelper.appendException(UNUSED, dfe, throwable);
                                 errorResultHelper.appendException(resultBuilder, dfe, throwable);
                             }
+                            // TODO FIXME
+                            System.out.println("RESULT DATA = " + resultBuilder.build().getData());
+                            System.out.println("RESULT ERRORS = " + resultBuilder.build().getErrors());
                             return (O) resultBuilder.build();
                         }
                     });
@@ -81,6 +92,7 @@ public class MultiDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
     @Override
     @SuppressWarnings("unchecked")
     protected <O> O invokeFailure(DataFetcherResult.Builder<Object> resultBuilder) {
+        System.out.println("INVOKE FAILURE, resultBuilder errors = " + resultBuilder.build().getErrors());
         return (O) Multi.createFrom()
                 .item(resultBuilder::build);
     }
