@@ -177,6 +177,8 @@ public class TypeInfo {
                 || CharSequence.class.isAssignableFrom(getRawType())
                 || Character.class.equals(getRawType()) // has a valueOf(char), not valueOf(String)
                 || java.util.Date.class.equals(getRawType())
+                //                || URL.class.equals(getRawType())
+                //                || URI.class.equals(getRawType())
                 || java.util.UUID.class.equals(getRawType())
                 || scalarConstructor().isPresent();
     }

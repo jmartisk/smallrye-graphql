@@ -41,6 +41,22 @@ class JsonStringReader extends Reader<JsonString> {
         }
         if (java.util.UUID.class.equals(this.type.getRawType()))
             return java.util.UUID.fromString(value.getString());
+        /*
+         * if (URL.class.equals(this.type.getRawType())) {
+         * try {
+         * return new URL(value.getString());
+         * } catch (MalformedURLException e) {
+         * throw new RuntimeException(e);
+         * }
+         * }
+         * if (URI.class.equals(this.type.getRawType())) {
+         * try {
+         * return new URI(value.getString());
+         * } catch (URISyntaxException e) {
+         * e.printStackTrace();
+         * }
+         * }
+         */
 
         if (Number.class.isAssignableFrom(this.type.getRawType())
                 && field != null &&

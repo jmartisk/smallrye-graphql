@@ -6,6 +6,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.eclipse.microprofile.graphql.Id;
@@ -828,6 +830,66 @@ class ScalarBehavior {
             then(fixture.query()).isEqualTo("query foo { foo }");
             then(value.text).isEqualTo("x-bar");
         }
+    }
+
+    public static class URL {
+
+        private String string;
+
+        public URL(String string) {
+            this.string = string;
+        }
+
+        public String getString() {
+            return string;
+        }
+
+        public static URL valueOf(String string) {
+            return new URL(string);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            URL url = (URL) o;
+            return Objects.equals(string, url.string);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(string);
+        }
+
+        @Override
+        public String toString() {
+            return string;
+        }
+    }
+
+    @GraphQLClientApi
+    interface UrlApi {
+        URL url(URL in);
+    }
+
+    @Nested
+    class CustomUrlBehavior {
+        @Test
+        void shouldCallUrlQuery() throws MalformedURLException {
+            URL url = new URL("http://www.awesome.com");
+            fixture.returnsData("'url':" + "'" + url + "'");
+            UrlApi api = fixture.build(UrlApi.class);
+
+            URL returned = api.url(url);
+
+            then(fixture.query()).isEqualTo("query url($in: URL) { url(in: $in) }");
+            then(returned).isEqualTo(url);
+        }
+
     }
 
     @GraphQLClientApi
