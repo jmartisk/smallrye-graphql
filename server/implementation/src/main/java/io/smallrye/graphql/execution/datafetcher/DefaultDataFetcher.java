@@ -49,6 +49,9 @@ public class DefaultDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
 
     @Override
     public CompletionStage<List<T>> load(List<K> keys, BatchLoaderEnvironment ble) {
+        System.out.println("---------------------------------");
+        System.out.println("DefaultDataFetcher.load, ble = " + ble);
+        System.out.println("keys = " + keys + " (size " + keys.size() + ")");
         final Object[] arguments = batchLoaderHelper.getArguments(keys, ble);
         final DataFetchingEnvironment dfe = batchLoaderHelper.getDataFetchingEnvironment(ble);
         final SmallRyeContext smallRyeContext = contextHelper.getSmallRyeContext(dfe);
@@ -57,6 +60,7 @@ public class DefaultDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
         ThreadContext threadContext = ThreadContext.builder().build();
         try {
             SmallRyeContext.setContext(smallRyeContext);
+            System.out.println("Setting SRC " + smallRyeContext.hashCode() + " on thread " + Thread.currentThread().getName());
 
             CompletableFuture<List<T>> reflectionSupplier = CompletableFuture.supplyAsync(() -> {
                 try {

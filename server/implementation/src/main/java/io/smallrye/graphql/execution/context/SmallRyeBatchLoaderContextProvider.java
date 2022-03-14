@@ -25,6 +25,7 @@ public class SmallRyeBatchLoaderContextProvider implements BatchLoaderContextPro
     }
 
     public static SmallRyeBatchLoaderContextProvider getForDataLoader(DataLoader dataLoader) {
+        System.out.println("returning provider " + INSTANCES.get(dataLoader).hashCode() + " for dataloader " + dataLoader);
         return INSTANCES.get(dataLoader);
     }
 
@@ -36,6 +37,7 @@ public class SmallRyeBatchLoaderContextProvider implements BatchLoaderContextPro
 
     @Override
     public DataFetchingEnvironment getContext() {
+        System.out.println("Provider " + this.hashCode() + " returning dfe: " + current.get().hashCode());
         return current.getAndSet(null);
     }
 }

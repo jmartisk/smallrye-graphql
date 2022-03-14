@@ -70,7 +70,12 @@ public abstract class AbstractDataFetcher<K, T> implements PlugableDataFetcher<K
 
     private SmallRyeContext initSmallRyeContext(final DataFetchingEnvironment dfe) {
         // update the context
+
+        System.out.println(
+                "UPDATING SRC " + contextHelper.getSmallRyeContext(dfe).hashCode() + " with DFE " + dfe.hashCode() + "" +
+                        "(field = " + dfe.getField());
         SmallRyeContext context = contextHelper.updateSmallRyeContextWithField(dfe, operation);
+        System.out.println("SRC AFTER UPDATING: " + context.hashCode());
         eventEmitter.fireBeforeDataFetch(context);
         return context;
     }

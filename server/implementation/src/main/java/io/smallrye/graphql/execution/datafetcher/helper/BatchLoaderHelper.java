@@ -37,6 +37,8 @@ public class BatchLoaderHelper {
     }
 
     public DataFetchingEnvironment getDataFetchingEnvironment(BatchLoaderEnvironment ble) {
+        System.out.println("---- returning BLE with DFE " + ble.getContext().hashCode() + " with SRC "
+                + ((DataFetchingEnvironment) ble.getContext()).getGraphQlContext().get("context").hashCode());
         return ble.getContext();
     }
 
@@ -44,6 +46,9 @@ public class BatchLoaderHelper {
         // FIXME: this is potentially brittle because it assumes that the batch loader will execute and
         //  consume the context before we call this again for a different operation, but I don't know
         //  how else to pass this context to the matching BatchLoaderEnvironment instance
+        System.out
+                .println("---- SETTING DFE: " + dfe.hashCode() + "(field= " + dfe.getField().getName() + ") for dataloader "
+                        + dataLoader);
         SmallRyeBatchLoaderContextProvider.getForDataLoader(dataLoader).set(dfe);
     }
 }
