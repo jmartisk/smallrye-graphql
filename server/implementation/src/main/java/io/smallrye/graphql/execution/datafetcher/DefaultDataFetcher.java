@@ -28,10 +28,19 @@ public class DefaultDataFetcher<K, T> extends AbstractDataFetcher<K, T> {
     @Override
     public <T> T invokeAndTransform(DataFetchingEnvironment dfe, DataFetcherResult.Builder<Object> resultBuilder,
             Object[] transformedArguments) throws Exception {
-        Object resultFromMethodCall = operationInvoker.invoke(transformedArguments);
-        Object resultFromTransform = fieldHelper.transformOrAdaptResponse(resultFromMethodCall, dfe);
-        resultBuilder.data(resultFromTransform);
-        return (T) resultBuilder.build();
+        try {
+            Object resultFromMethodCall = operationInvoker.invoke(transformedArguments);
+            Object resultFromTransform = fieldHelper.transformOrAdaptResponse(resultFromMethodCall, dfe);
+            resultBuilder.data(resultFromTransform);
+            return (T) resultBuilder.build();
+        }  catch (ConstraintViolationException cve) {
+            // FIXME: this is bad as it turns HV into a required dependency
+            // also needs to be applied on other data fetcher implementations (which ones?)
+            BeanValidationException bve = new BeanValidationException(cve.getConstraintViolations(),
+                operationInvoker.getMethod());
+            bve.appendDataFetcherResult(resultBuilder, dfe);
+            return (T) resultBuilder.build();
+        }
     }
 
     @Override

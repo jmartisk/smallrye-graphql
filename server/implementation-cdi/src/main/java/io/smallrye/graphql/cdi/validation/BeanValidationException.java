@@ -20,10 +20,10 @@ import io.smallrye.graphql.api.Context;
 import io.smallrye.graphql.transformation.AbstractDataFetcherException;
 
 public class BeanValidationException extends AbstractDataFetcherException {
-    private final Set<ConstraintViolation<Object>> violations;
+    private final Set<ConstraintViolation<?>> violations;
     private final Method method;
 
-    public BeanValidationException(Set<ConstraintViolation<Object>> violations, Method method) {
+    public BeanValidationException(Set<ConstraintViolation<?>> violations, Method method) {
         this.violations = violations;
         this.method = method;
     }
@@ -47,7 +47,7 @@ public class BeanValidationException extends AbstractDataFetcherException {
             this.dfe = dfe;
         }
 
-        List<NamedNode<?>> build(ConstraintViolation<Object> violation) {
+        List<NamedNode<?>> build(ConstraintViolation<?> violation) {
             Iterator<Path.Node> violationNodes = violation.getPropertyPath().iterator();
 
             return asList(

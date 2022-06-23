@@ -18,10 +18,10 @@ import graphql.language.NamedNode;
 import graphql.language.SourceLocation;
 
 public class BeanValidationError implements GraphQLError {
-    private final ConstraintViolation<Object> violation;
+    private final ConstraintViolation<?> violation;
     private final List<NamedNode<?>> requestedPath;
 
-    public BeanValidationError(ConstraintViolation<Object> violation, List<NamedNode<?>> requestedPath) {
+    public BeanValidationError(ConstraintViolation<?> violation, List<NamedNode<?>> requestedPath) {
         this.violation = violation;
         this.requestedPath = requestedPath;
     }
