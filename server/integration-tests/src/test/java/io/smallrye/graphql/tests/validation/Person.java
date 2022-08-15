@@ -13,6 +13,9 @@ public class Person {
     @PositiveOrZero
     private int age;
 
+    @Pattern(regexp = ".+%")
+    private String somethingEndingWithPercentageSign;
+
     public String getFirstName() {
         return firstName;
     }
@@ -35,5 +38,13 @@ public class Person {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public String getSomethingEndingWithPercentageSign() {
+        return somethingEndingWithPercentageSign;
+    }
+
+    public void setSomethingEndingWithPercentageSign(String somethingEndingWithPercentageSign) {
+        this.somethingEndingWithPercentageSign = somethingEndingWithPercentageSign;
     }
 }
