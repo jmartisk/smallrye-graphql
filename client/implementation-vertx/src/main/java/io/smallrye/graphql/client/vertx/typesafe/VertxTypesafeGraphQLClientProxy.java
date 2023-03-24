@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import jakarta.json.Json;
@@ -66,6 +67,7 @@ class VertxTypesafeGraphQLClientProxy {
     private final ConcurrentMap<String, String> queryCache = new ConcurrentHashMap<>();
 
     private final Map<String, String> additionalHeaders;
+    private final Map<String, Supplier<String>> dynamicHeaders;
     private final Map<String, Object> initPayload;
     private final ServiceURLSupplier endpoint;
     private final ServiceURLSupplier websocketUrl;
@@ -97,7 +99,8 @@ class VertxTypesafeGraphQLClientProxy {
             WebClient webClient,
             List<WebsocketSubprotocol> subprotocols,
             Integer subscriptionInitializationTimeout,
-            boolean allowUnexpectedResponseFields) {
+            boolean allowUnexpectedResponseFields,
+            Map<String, Supplier<String>> dynamicHeaders) {
         this.api = api;
         this.additionalHeaders = additionalHeaders;
         this.initPayload = initPayload;
@@ -125,6 +128,7 @@ class VertxTypesafeGraphQLClientProxy {
         this.subprotocols = subprotocols;
         this.subscriptionInitializationTimeout = subscriptionInitializationTimeout;
         this.allowUnexpectedResponseFields = allowUnexpectedResponseFields;
+        this.dynamicHeaders = dynamicHeaders;
     }
 
     Object invoke(MethodInvocation method) {

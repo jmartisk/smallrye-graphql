@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
+import java.util.function.Supplier;
 
 import io.smallrye.graphql.client.websocket.WebsocketSubprotocol;
 
@@ -18,6 +19,8 @@ public interface DynamicGraphQLClientBuilder {
     DynamicGraphQLClientBuilder configKey(String configKey);
 
     DynamicGraphQLClientBuilder header(String key, String value);
+
+    DynamicGraphQLClientBuilder header(String key, Supplier<String> valueSupplier);
 
     DynamicGraphQLClientBuilder initPayload(Map<String, Object> payload);
 

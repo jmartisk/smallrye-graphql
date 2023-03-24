@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
+import java.util.function.Supplier;
 
 import io.smallrye.graphql.client.websocket.WebsocketSubprotocol;
 
@@ -73,6 +74,13 @@ public interface TypesafeGraphQLClientBuilder {
      * @see AuthorizationHeader
      */
     TypesafeGraphQLClientBuilder header(String name, String value);
+
+    /**
+     * Header with a dynamic value provided by the supplier. The supplier will be
+     * called to provide a value for the header for each invocation. When the supplier
+     * returns null, the header will not be added to the request.
+     */
+    TypesafeGraphQLClientBuilder header(String name, Supplier<String> valueSupplier);
 
     /**
      * Static payload to send with initialization method on subscription.

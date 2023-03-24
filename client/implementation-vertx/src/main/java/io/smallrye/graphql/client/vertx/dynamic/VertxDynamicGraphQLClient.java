@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.smallrye.graphql.client.vertx.common.Tools;
 import jakarta.json.JsonObject;
 
 import org.jboss.logging.Logger;
@@ -49,6 +51,7 @@ public class VertxDynamicGraphQLClient implements DynamicGraphQLClient {
 
     private final boolean executeSingleOperationsOverWebsocket;
     private final MultiMap headers;
+    private final Map<String, Supplier<String>> dynamicHeaders;
     private final Map<String, Object> initPayload;
     private final List<WebsocketSubprotocol> subprotocols;
     private final Integer subscriptionInitializationTimeout;
@@ -64,10 +67,10 @@ public class VertxDynamicGraphQLClient implements DynamicGraphQLClient {
     private final AtomicReference<Uni<WebSocketSubprotocolHandler>> webSocketHandler = new AtomicReference<>();
 
     VertxDynamicGraphQLClient(Vertx vertx, WebClient webClient,
-            String url, String websocketUrl, boolean executeSingleOperationsOverWebsocket,
-            MultiMap headers, Map<String, Object> initPayload, WebClientOptions options,
-            List<WebsocketSubprotocol> subprotocols, Integer subscriptionInitializationTimeout,
-            boolean allowUnexpectedResponseFields) {
+                              String url, String websocketUrl, boolean executeSingleOperationsOverWebsocket,
+                              MultiMap headers, Map<String, Object> initPayload, WebClientOptions options,
+                              List<WebsocketSubprotocol> subprotocols, Integer subscriptionInitializationTimeout,
+                              boolean allowUnexpectedResponseFields, Map<String, Supplier<String>> dynamicHeaders) {
         if (options != null) {
             this.httpClient = vertx.createHttpClient(options);
         } else {
@@ -103,6 +106,7 @@ public class VertxDynamicGraphQLClient implements DynamicGraphQLClient {
         this.subprotocols = subprotocols;
         this.subscriptionInitializationTimeout = subscriptionInitializationTimeout;
         this.allowUnexpectedResponseFields = allowUnexpectedResponseFields;
+        this.dynamicHeaders = dynamicHeaders;
     }
 
     @Override
@@ -307,7 +311,8 @@ public class VertxDynamicGraphQLClient implements DynamicGraphQLClient {
                 return Uni.createFrom().<WebSocketSubprotocolHandler> emitter(handlerEmitter -> {
                     List<String> subprotocolIds = subprotocols.stream().map(i -> i.getProtocolId()).collect(toList());
                     websocketUrl.get().subscribe().with(websocketUrl -> {
-                        httpClient.webSocketAbs(websocketUrl, headers, WebsocketVersion.V13, subprotocolIds,
+                        httpClient.webSocketAbs(websocketUrl, Tools.mergeWithDynamicHeaders(headers, dynamicHeaders),
+                                WebsocketVersion.V13, subprotocolIds,
                                 result -> {
                                     if (result.succeeded()) {
                                         WebSocket webSocket = result.result();
@@ -335,7 +340,7 @@ public class VertxDynamicGraphQLClient implements DynamicGraphQLClient {
     private Uni<Response> executeSingleResultOperationOverHttp(JsonObject json) {
         return Uni.createFrom().completionStage(
                 url.get().subscribeAsCompletionStage().thenCompose(instanceUrl -> webClient.postAbs(instanceUrl)
-                        .putHeaders(headers)
+                        .putHeaders(Tools.mergeWithDynamicHeaders(headers, dynamicHeaders))
                         .sendBuffer(Buffer.buffer(json.toString()))
                         .toCompletionStage()))
                 .map(response -> ResponseReader.readFrom(response.bodyAsString(),

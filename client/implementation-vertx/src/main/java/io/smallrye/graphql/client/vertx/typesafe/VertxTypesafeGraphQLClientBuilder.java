@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -37,6 +38,7 @@ public class VertxTypesafeGraphQLClientBuilder implements TypesafeGraphQLClientB
     private String websocketUrl;
     private Boolean executeSingleOperationsOverWebsocket;
     private Map<String, String> headers;
+    private Map<String, Supplier<String>> dynamicHeaders;
     private Map<String, Object> initPayload;
     private List<WebsocketSubprotocol> subprotocols;
     private Vertx vertx;
@@ -99,6 +101,15 @@ public class VertxTypesafeGraphQLClientBuilder implements TypesafeGraphQLClientB
         return this;
     }
 
+    @Override
+    public VertxTypesafeGraphQLClientBuilder header(String name, Supplier<String> valueSupplier) {
+        if (this.dynamicHeaders == null) {
+            this.dynamicHeaders = new LinkedHashMap<>();
+        }
+        this.dynamicHeaders.put(name, valueSupplier);
+        return this;
+    }
+
     public VertxTypesafeGraphQLClientBuilder initPayload(Map<String, Object> initPayload) {
         if (this.initPayload == null) {
             this.initPayload = new LinkedHashMap<>();
@@ -157,7 +168,8 @@ public class VertxTypesafeGraphQLClientBuilder implements TypesafeGraphQLClientB
                 endpoint,
                 websocketUrl, executeSingleOperationsOverWebsocket, httpClient, webClient, subprotocols,
                 websocketInitializationTimeout,
-                allowUnexpectedResponseFields);
+                allowUnexpectedResponseFields,
+                dynamicHeaders);
         return apiClass.cast(Proxy.newProxyInstance(getClassLoader(apiClass), new Class<?>[] { apiClass },
                 (proxy, method, args) -> invoke(graphQlClient, method, args)));
     }

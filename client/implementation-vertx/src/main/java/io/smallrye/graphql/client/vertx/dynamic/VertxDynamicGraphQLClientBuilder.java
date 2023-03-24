@@ -1,6 +1,7 @@
 package io.smallrye.graphql.client.vertx.dynamic;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -33,6 +34,7 @@ public class VertxDynamicGraphQLClientBuilder implements DynamicGraphQLClientBui
     private Boolean executeSingleOperationsOverWebsocket;
     private String configKey;
     private final MultiMap headersMap;
+    private final Map<String, Supplier<String>> dynamicHeaders;
     private final Map<String, Object> initPayload;
     private WebClientOptions options;
     private List<WebsocketSubprotocol> subprotocols;
@@ -43,6 +45,7 @@ public class VertxDynamicGraphQLClientBuilder implements DynamicGraphQLClientBui
         headersMap = new HeadersMultiMap();
         initPayload = new HashMap<>();
         headersMap.set("Content-Type", "application/json");
+        dynamicHeaders = new HashMap<>();
         subprotocols = new ArrayList<>();
     }
 
@@ -58,6 +61,12 @@ public class VertxDynamicGraphQLClientBuilder implements DynamicGraphQLClientBui
 
     public VertxDynamicGraphQLClientBuilder header(String name, String value) {
         headersMap.set(name, value);
+        return this;
+    }
+
+    @Override
+    public DynamicGraphQLClientBuilder header(String key, Supplier<String> valueSupplier) {
+        dynamicHeaders.put(key, valueSupplier);
         return this;
     }
 
@@ -150,7 +159,7 @@ public class VertxDynamicGraphQLClientBuilder implements DynamicGraphQLClientBui
         }
         return new VertxDynamicGraphQLClient(toUseVertx, webClient, url, websocketUrl,
                 executeSingleOperationsOverWebsocket, headersMap, initPayload, options, subprotocols,
-                subscriptionInitializationTimeout, allowUnexpectedResponseFields);
+                subscriptionInitializationTimeout, allowUnexpectedResponseFields, dynamicHeaders);
     }
 
     /**
