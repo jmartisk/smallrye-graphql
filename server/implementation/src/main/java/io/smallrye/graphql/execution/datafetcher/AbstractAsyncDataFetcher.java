@@ -53,6 +53,7 @@ public abstract class AbstractAsyncDataFetcher<K, T> extends AbstractDataFetcher
                             return;
                         }
                     } else {
+                        eventEmitter.fireAfterDataFetch(context);
                         try {
                             resultBuilder.data(fieldHelper.transformOrAdaptResponse(result, dfe));
                         } catch (AbstractDataFetcherException te) {

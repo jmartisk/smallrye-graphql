@@ -52,9 +52,17 @@
         </dependency>
 
         <!-- OpenTracing --> 
+<!--        <dependency>-->
+<!--            <groupId>io.opentracing</groupId>-->
+<!--            <artifactId>opentracing-api</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+
+        <!-- OpenTelemetry -->
         <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-api</artifactId>
+            <groupId>io.smallrye.opentelemetry</groupId>
+            <artifactId>smallrye-opentelemetry-api</artifactId>
+            <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
 
