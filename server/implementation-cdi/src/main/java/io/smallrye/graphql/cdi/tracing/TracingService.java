@@ -4,16 +4,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.spi.CDI;
 
-// import io.opentracing.Scope;
-// import io.opentracing.Span;
-// import io.opentracing.Tracer;
+import org.jboss.logging.Logger;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -24,121 +22,53 @@ import io.smallrye.graphql.execution.event.Priorities;
 import io.smallrye.graphql.spi.EventingService;
 
 /**
- * Listening for event and create traces from it
- * <p>
- * FIXME: currently, this places the work of all fetchers inside an operation (execution)
- * under the same parent, which is the execution itself. It would be cool
- * to define some reasonable hierarchy between fetchers, so
- * for example, when evaluating a source method requires evaluating another source method,
- * the second one would be a child of the first one.
- *
+ * Listening for operation start/end event and create traces from it
+ * 
  * @author Jan Martiska (jmartisk@redhat.com)
  * @author Phillip Kruger (phillip.kruger@redhat.com)
  */
 @Priority(Priorities.FIRST_IN_LAST_OUT)
 public class TracingService implements EventingService {
 
-    private static final Map<String, Stack<Span>> spans = new ConcurrentHashMap<>();
-    private static final Map<String, Stack<Scope>> scopes = new ConcurrentHashMap<>();
+    private Logger LOG = Logger.getLogger(TracingService.class);
+    private static final Map<String, Span> spans = new ConcurrentHashMap<>();
+    private static final Map<String, Scope> scopes = new ConcurrentHashMap<>();
 
     private Tracer tracer;
 
     @Override
     public void beforeExecute(Context context) {
-        // FIXME: if operationName is not set in the request explicitly, this is empty
         String operationName = getOperationName(context);
         Span span = getTracer().spanBuilder(operationName)
                 .setAttribute("graphql.executionId", context.getExecutionId())
                 .setAttribute("graphql.operationType", getOperationNameString(context.getRequestedOperationTypes()))
                 .setAttribute("graphql.operationName", context.getOperationName().orElse(EMPTY))
                 .startSpan();
+        LOG.trace("Start span " + span.getSpanContext().getSpanId());
 
-        spans.put(context.getExecutionId(), new Stack<>() {
-            {
-                push(span);
-            }
-        });
-        scopes.put(context.getExecutionId(), new Stack<>() {
-            {
-                push(span.makeCurrent());
-            }
-        });
-        //        System.err.println(
-        //                "beforeExecute created:" + span.getSpanContext().getSpanId() + " operationName: " + context.getFieldName());
+        spans.put(context.getExecutionId(), span);
+        scopes.put(context.getExecutionId(), span.makeCurrent());
     }
 
     @Override
     public void afterExecute(Context context) {
-        Span span = spans.get(context.getExecutionId()).pop();
-        //        System.err.println(
-        //                "afterExecute delete:" + span.getSpanContext().getSpanId() + " operationName: " + context.getFieldName());
+        Span span = spans.remove(context.getExecutionId());
 
         if (span != null) {
-            scopes.get(context.getExecutionId()).pop().close();
+            LOG.trace("Finish span " + span.getSpanContext().getSpanId());
+            scopes.remove(context.getExecutionId()).close();
             span.end();
         }
-        // DELETE
-        scopes.remove(context.getExecutionId());
-        spans.remove(context.getExecutionId());
     }
 
     @Override
     public void errorExecute(Context context, Throwable t) {
-        Span span = spans.get(context.getExecutionId()).pop();
-        //        System.err.println(
-        //                "errorExecute delete:" + span.getSpanContext().getSpanId() + " operationName: " + context.getFieldName());
+        Span span = spans.remove(context.getExecutionId());
         if (span != null) {
+            LOG.trace("Exceptionally finish span " + span.getSpanContext().getSpanId());
             span.recordException(t);
             span.setStatus(StatusCode.ERROR);
-            scopes.get(context.getExecutionId()).pop().close();
-            span.end();
-        }
-        scopes.remove(context.getExecutionId());
-        spans.remove(context.getExecutionId());
-    }
-
-    @Override
-    public void beforeDataFetch(Context context) {
-        Span span = getTracer().spanBuilder(getOperationNameForParentType(context))
-                .setParent(io.opentelemetry.context.Context.current().with(spans.get(context.getExecutionId()).peek()))
-                .setAttribute("graphql.executionId", context.getExecutionId())
-                .setAttribute("graphql.operationType", getOperationNameString(context.getOperationType()))
-                .setAttribute("graphql.operationName", context.getOperationName().orElse(EMPTY))
-                .setAttribute("graphql.parent", context.getParentTypeName().orElse(EMPTY))
-                .setAttribute("graphql.field", context.getFieldName())
-                .setAttribute("graphql.path", context.getPath())
-                .startSpan();
-        //        System.err.println(
-        //                "beforeDataFetch created:" + span.getSpanContext().getSpanId() + " operationName: " + context.getFieldName());
-        spans.get(context.getExecutionId()).push(span);
-        scopes.get(context.getExecutionId()).push(span.makeCurrent());
-    }
-
-    // FIXME: is the fetcher is asynchronous, this typically ends its span before
-    // the work is actually done - after the fetcher itself returns a future.
-    // We currently don't have a way to find out when
-    // the right moment to close this span is
-    @Override
-    public void afterDataFetch(Context context) {
-        Span span = spans.get(context.getExecutionId()).pop();
-        //        System.err.println(
-        //                "afterDataFetch delete:" + span.getSpanContext().getSpanId() + " operationName: " + context.getFieldName());
-
-        if (span != null) {
-            scopes.get(context.getExecutionId()).pop().close();
-            span.end();
-        }
-    }
-
-    @Override
-    public void errorDataFetch(Context context, Throwable t) {
-        Span span = spans.get(context.getExecutionId()).pop();
-        //        System.err.println(
-        //                "errorDataFetch delete:" + span.getSpanContext().getSpanId() + " operationName: " + context.getFieldName());
-
-        if (span != null) {
-            logError(span, t);
-            scopes.get(context.getExecutionId()).pop().close();
+            scopes.remove(context.getExecutionId()).close();
             span.end();
         }
     }
