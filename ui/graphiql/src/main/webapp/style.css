@@ -4,6 +4,11 @@ body {
     width: 100%;
     overflow: hidden;
 }
+
+.graphiql-container {
+    --color-primary: 320, 95%, 43%;
+}
+
 #graphiql {
     height: 100vh;
 }
@@ -31,9 +36,11 @@ body {
     color: #01a0cc!important;
 }
 
-.execute-button {
+
+
+.graphiql-execute-button {
     background: none!important;
-    border-color: #01a0cc!important;
+    /* border-color: #01a0cc; */
     padding: 0!important;
     cursor: pointer;
     box-shadow: unset!important;

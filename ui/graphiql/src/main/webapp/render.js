@@ -1,48 +1,33 @@
-const api = '/graphql';
-const ui = '/graphql-ui';
-const logo = '/graphql-ui';
+const api = "/graphql";
 const defaultQuery = "";
 const headerEditorEnabled = true;
 const shouldPersistHeaders = false;
 
-var webSocket = null;
-var observable = null;
-
 const urlParams = new URLSearchParams(window.location.search);
-const embed = urlParams.get('embed');
-
-window.onbeforeunload = function (event) {
-    if(webSocket !==null){
-        webSocket.close();
-        webSocket = null;
-        observable = null;
-    }
-};
 
 
 // Parse the search string to get url parameters.
 var search = window.location.search;
 var parameters = {};
 search
-        .substr(1)
-        .split('&')
-        .forEach(function (entry) {
-            var eq = entry.indexOf('=');
-            if (eq >= 0) {
-                parameters[decodeURIComponent(entry.slice(0, eq))] = decodeURIComponent(
-                        entry.slice(eq + 1),
-                        );
-            }
-        });
+    .substr(1)
+    .split("&")
+    .forEach(function (entry) {
+        var eq = entry.indexOf("=");
+        if (eq >= 0) {
+            parameters[decodeURIComponent(entry.slice(0, eq))] =
+                decodeURIComponent(entry.slice(eq + 1));
+        }
+    });
 
 // If variables was provided, try to format it.
 if (parameters.variables) {
     try {
         parameters.variables = JSON.stringify(
-                JSON.parse(parameters.variables),
-                null,
-                2,
-                );
+            JSON.parse(parameters.variables),
+            null,
+            2
+        );
     } catch (e) {
         // Do nothing, we want to display the invalid JSON as a string, rather
         // than present an error.
@@ -53,8 +38,10 @@ if (parameters.variables) {
 if (parameters.headers) {
     try {
         parameters.headers = JSON.stringify(
-                JSON.parse(parameters.headers),
-                null, 2, );
+            JSON.parse(parameters.headers),
+            null,
+            2
+        );
     } catch (e) {
         // Do nothing, we want to display the invalid JSON as a string, rather
         // than present an error.
@@ -63,20 +50,15 @@ if (parameters.headers) {
 
 // When the query and variables string is edited, update the URL bar so
 // that it can be easily shared.
-function onEditQuery(newQuery) {
-    parameters.query = newQuery;
-    updateURL();
-}
+//function onEditQuery(newQuery) {
+//    updateURL();
+//}
 
 function onEditVariables(newVariables) {
     parameters.variables = newVariables;
     updateURL();
 }
 
-function onEditOperationName(newOperationName) {
-    parameters.operationName = newOperationName;
-    updateURL();
-}
 
 function onEditHeaders(newHeaders) {
     parameters.headers = newHeaders;
@@ -85,17 +67,19 @@ function onEditHeaders(newHeaders) {
 
 function updateURL() {
     var newSearch =
-            '?' +
-            Object.keys(parameters)
+        "?" +
+        Object.keys(parameters)
             .filter(function (key) {
                 return Boolean(parameters[key]);
             })
             .map(function (key) {
                 return (
-                        encodeURIComponent(key) + '=' + encodeURIComponent(parameters[key])
-                        );
+                    encodeURIComponent(key) +
+                    "=" +
+                    encodeURIComponent(parameters[key])
+                );
             })
-            .join('&');
+            .join("&");
     history.replaceState(null, null, newSearch);
 }
 
@@ -107,149 +91,28 @@ var defaultHeaders = {
 // Defines a GraphQL fetcher using the fetch API. You're not required to
 // use fetch, and could instead implement graphQLFetcher however you like,
 // as long as it returns a Promise or Observable.
-function graphQLFetcher(graphQLParams) {
+function graphQLFetcher() {
     let mergedHeaders;
-    if (typeof parameters.headers === "undefined" || parameters.headers === null || parameters.headers.trim() === "") {
+    if (
+        typeof parameters.headers === "undefined" ||
+        parameters.headers === null ||
+        parameters.headers.trim() === ""
+    ) {
         mergedHeaders = defaultHeaders;
     } else {
         mergedHeaders = {
             ...defaultHeaders,
-            ...JSON.parse(parameters.headers)
+            ...JSON.parse(parameters.headers),
         };
     }
-    
-    var query = graphQLParams.query;
-    
-    if(query.startsWith("subscription ")){
-        var new_uri = getWsUrl();
-        var initialized = false;
-        observable = new rxjs.Observable((observer) => {
-            webSocket = new WebSocket(url = new_uri, protocols = ["graphql-transport-ws", "graphql-ws"]);
-            observer.next("Initializing a connection to the server...");
-
-            webSocket.onopen = function() {
-                if(webSocket.protocol === "graphql-transport-ws") {
-                    webSocket.send(JSON.stringify({type: "connection_init"}));
-                    webSocket.onmessage = function (event) {
-                        let data = JSON.parse(event.data);
-                        switch(data["type"]) {
-                            case 'connection_ack':
-                                initialized = true;
-                                let startMessage = {
-                                    id: "1",
-                                    type: "subscribe",
-                                    payload: graphQLParams
-                                };
-                                webSocket.send(JSON.stringify(startMessage));
-                                observer.next("Connection initialized (protocol=graphql-transport-ws), requested a subscription...")
-                                break;
-                            case 'next':
-                                observer.next(data.payload);
-                                break;
-                            case 'complete':
-                                webSocket.close();
-                                break;
-                            case 'ping':
-                                webSocket.send(JSON.stringify({
-                                    type: "pong"
-                                }));
-                                break;
-                            case 'pong':
-                                break;
-                            case 'error':
-                                observer.next(data.payload);
-                                webSocket.close();
-                            default:
-                                observer.next(data);
-                                break;
-                        }
-                    };
-
-                } else if(webSocket.protocol === "graphql-ws") {
-                    webSocket.send(JSON.stringify({type: "connection_init"}));
-                    webSocket.onmessage = function (event) {
-                        let data = JSON.parse(event.data);
-                        switch(data["type"]) {
-                            case 'connection_ack':
-                                initialized = true;
-                                let startMessage = {
-                                    id: "1",
-                                    type: "start",
-                                    payload: graphQLParams
-                                };
-                                webSocket.send(JSON.stringify(startMessage));
-                                observer.next("Connection initialized (protocol=graphql-ws), requested a subscription...")
-                                break;
-                            case 'data':
-                                observer.next(data.payload);
-                                break;
-                            case 'complete':
-                                webSocket.close();
-                                break;
-                            case 'ka':
-                                break;
-                            case 'error':
-                                observer.next(data);
-                                webSocket.close();
-                            default:
-                                observer.next(data);
-                                break;
-                        }
-                    };
-                } else {
-                    observer.next("ERROR: Server picked an unknown subprotocol: " + webSocket.protocol);
-                }
-            };
-            webSocket.onerror = function(err) {
-                observer.error(JSON.stringify(err, null, 4));
-            };
-            webSocket.onclose = function(event){
-                observer.complete();
-                observable = null;
-            };
-            return {
-                unsubscribe() {
-                    if(initialized) {
-                        if(webSocket.protocol === "graphql-transport-ws") {
-                            webSocket.send(JSON.stringify({
-                                id: "1",
-                                type: "complete"
-                            }));
-                        } else if(webSocket.protocol === "graphql-ws") {
-                            webSocket.send(JSON.stringify({
-                                id: "1",
-                                type: "stop"
-                            }));
-                            webSocket.send(JSON.stringify({
-                                type: "connection_terminate"
-                            }));
-                        }
-                    }
-                    webSocket.close();
-                    webSocket = null;
-                    observable = null;
-                }
-            };
-          });
-          return observable;
-    }else{
-        return fetch(api, {
-            method: 'post',
-            headers: mergedHeaders,
-            body: JSON.stringify(graphQLParams),
-        }).then(function (response) {
-            return response.text();
-        }).then(function (responseBody) {
-            try {
-                return JSON.parse(responseBody);
-            } catch (error) {
-                return responseBody;
-            }
-        });
-    }
+    return GraphiQL.createFetcher({
+        url: getUrl(),
+        subscriptionUrl: getWsUrl(),
+        headers: mergedHeaders,
+    });
 }
 
-function getWsUrl(){
+function getWsUrl() {
     var new_uri;
     if (window.location.protocol === "https:") {
         new_uri = "wss:";
@@ -257,31 +120,53 @@ function getWsUrl(){
         new_uri = "ws:";
     }
     new_uri += "//" + window.location.host + api;
-    
+
     return new_uri;
 }
 
-ReactDOM.render(
-        React.createElement(GraphiQL, {
-            fetcher: graphQLFetcher,
-            query: parameters.query,
-            variables: parameters.variables,
-            headers: parameters.headers,
-            operationName: parameters.operationName,
-            onEditQuery: onEditQuery,
-            onEditVariables: onEditVariables,
-            onEditHeaders: onEditHeaders,
-            defaultSecondaryEditorOpen: true,
-            onEditOperationName: onEditOperationName,
-            headerEditorEnabled: headerEditorEnabled,
-            shouldPersistHeaders: shouldPersistHeaders,
-            defaultQuery: defaultQuery
-        }),
-        document.getElementById('graphiql'),
-        );
-        
-if(!embed){
-    document.getElementsByClassName("title")[0].innerHTML = "<a id='graphQLUiLogoLink' href='" + logo + "'><img src='logo.png' alt='SmallRye Graphql' height='44' align='middle'></a><a id='graphQLUiTitleLink' href='" + ui + "'></a>";
-}else{
-    document.getElementsByClassName("title")[0].innerHTML = "";
+function getUrl() {
+    return window.location.protocol + "//" + window.location.host + api;
 }
+
+function GraphiQLWithExplorer() {
+//        var [query, setQuery] = React.useState(parameters.query);
+        const onEditQuery = (newQuery) => {
+            parameters.query = newQuery;
+//           setQuery(parameters.query);
+            updateURL();
+        }
+
+//        var explorerPlugin = GraphiQLPluginExplorer.useExplorerPlugin({
+//          query: parameters.query,
+//          onEdit: onEditQuery,
+//        });
+
+        const onEditOperationName = (newOperationName) => {
+            console.log("onEditOperationName called");
+            parameters.operationName = newOperationName;
+            updateURL();
+            console.log(parameters);
+//            setQuery(parameters.query);
+        }
+        return React.createElement(GraphiQL, {
+                       fetcher: graphQLFetcher(),
+                       query: parameters.query,
+                       variables: parameters.variables,
+                       headers: parameters.headers,
+                       operationName: parameters.operationName,
+                       onEditOperationName: onEditOperationName,
+                       onEditVariables: onEditVariables,
+                       onEditHeaders: onEditHeaders,
+                       onEditQuery: onEditQuery,
+                       defaultSecondaryEditorOpen: true,
+                       headerEditorEnabled: headerEditorEnabled,
+                       shouldPersistHeaders: shouldPersistHeaders,
+                       defaultQuery: defaultQuery,
+//                       plugins: [explorerPlugin],
+                       defaultEditorToolsVisibility: true,
+                   });
+      }
+
+ReactDOM.render(React.createElement(GraphiQLWithExplorer),
+    document.getElementById("graphiql")
+);
