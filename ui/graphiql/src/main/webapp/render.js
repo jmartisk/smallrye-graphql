@@ -91,7 +91,7 @@ var defaultHeaders = {
 // Defines a GraphQL fetcher using the fetch API. You're not required to
 // use fetch, and could instead implement graphQLFetcher however you like,
 // as long as it returns a Promise or Observable.
-function graphQLFetcher() {
+function graphQLFetcher(graphQLParams) {
     let mergedHeaders;
     if (
         typeof parameters.headers === "undefined" ||
@@ -105,11 +105,149 @@ function graphQLFetcher() {
             ...JSON.parse(parameters.headers),
         };
     }
-    return GraphiQL.createFetcher({
-        url: getUrl(),
-        subscriptionUrl: getWsUrl(),
-        headers: mergedHeaders,
-    });
+
+    var query = graphQLParams.query;
+
+    if(query.startsWith("subscription ")) {
+        var new_uri = getWsUrl();
+        var initialized = false;
+        observable = new rxjs.Observable((observer) => {
+            webSocket = new WebSocket(url = new_uri, protocols = ["graphql-transport-ws", "graphql-ws"]);
+            observer.next("Initializing a connection to the server...");
+
+            webSocket.onopen = function() {
+                if(webSocket.protocol === "graphql-transport-ws") {
+                    webSocket.send(JSON.stringify({type: "connection_init"}));
+                    webSocket.onmessage = function (event) {
+                        let data = JSON.parse(event.data);
+                        switch(data["type"]) {
+                            case 'connection_ack':
+                                initialized = true;
+                                let startMessage = {
+                                    id: "1",
+                                    type: "subscribe",
+                                    payload: parameters
+                                };
+                                webSocket.send(JSON.stringify(startMessage));
+                                observer.next("Connection initialized (protocol=graphql-transport-ws), requested a subscription...")
+                                break;
+                            case 'next':
+                                observer.next(data.payload);
+                                break;
+                            case 'complete':
+                                webSocket.close();
+                                break;
+                            case 'ping':
+                                webSocket.send(JSON.stringify({
+                                    type: "pong"
+                                }));
+                                break;
+                            case 'pong':
+                                break;
+                            case 'error':
+                                observer.next(data.payload);
+                                webSocket.close();
+                            default:
+                                observer.next(data);
+                                break;
+                        }
+                    };
+
+                } else if(webSocket.protocol === "graphql-ws") {
+                    webSocket.send(JSON.stringify({type: "connection_init"}));
+                    webSocket.onmessage = function (event) {
+                        let data = JSON.parse(event.data);
+                        switch(data["type"]) {
+                            case 'connection_ack':
+                                initialized = true;
+                                let startMessage = {
+                                    id: "1",
+                                    type: "start",
+                                    payload: graphQLParams
+                                };
+                                webSocket.send(JSON.stringify(startMessage));
+                                observer.next("Connection initialized (protocol=graphql-ws), requested a subscription...")
+                                break;
+                            case 'data':
+                                observer.next(data.payload);
+                                break;
+                            case 'complete':
+                                webSocket.close();
+                                break;
+                            case 'ka':
+                                break;
+                            case 'error':
+                                observer.next(data);
+                                webSocket.close();
+                            default:
+                                observer.next(data);
+                                break;
+                        }
+                    };
+                } else {
+                    observer.next("ERROR: Server picked an unknown subprotocol: " + webSocket.protocol);
+                }
+            };
+            webSocket.onerror = function(err) {
+                observer.error(JSON.stringify(err, null, 4));
+            };
+            webSocket.onclose = function(event){
+                observer.complete();
+                observable = null;
+            };
+            return {
+                unsubscribe() {
+                    if(initialized) {
+                        if(webSocket.protocol === "graphql-transport-ws") {
+                            webSocket.send(JSON.stringify({
+                                id: "1",
+                                type: "complete"
+                            }));
+                        } else if(webSocket.protocol === "graphql-ws") {
+                            webSocket.send(JSON.stringify({
+                                id: "1",
+                                type: "stop"
+                            }));
+                            webSocket.send(JSON.stringify({
+                                type: "connection_terminate"
+                            }));
+                        }
+                    }
+                    webSocket.close();
+                    webSocket = null;
+                    observable = null;
+                }
+            };
+        });
+        return observable;
+    } else {
+        return fetch(api, {
+            method: 'post',
+            headers: mergedHeaders,
+            body: JSON.stringify(parameters),
+        }).then(function (response) {
+            console.log("Fetched with operationName: " + parameters.operationName)
+            return response.text();
+        }).then(function (responseBody) {
+            try {
+                return JSON.parse(responseBody);
+            } catch (error) {
+                return responseBody;
+            }
+        });
+    }
+
+    // FIXME: this is the way using GraphiQL.createFetcher provided by graphiql
+    // but with it we hit the https://github.com/graphql/graphiql/issues/1807 issue.
+    // So we are working around it by calling fetch directly above,
+    // and handling websockets for subscriptions manually
+
+    // return GraphiQL.createFetcher({
+    //     url: getUrl(),
+    //     subscriptionUrl: getWsUrl(),
+    //     headers: mergedHeaders,
+    // });
+
 }
 
 function getWsUrl() {
@@ -149,7 +287,7 @@ function GraphiQLWithExplorer() {
 //            setQuery(parameters.query);
         }
         return React.createElement(GraphiQL, {
-                       fetcher: graphQLFetcher(),
+                       fetcher: graphQLFetcher,
                        query: parameters.query,
                        variables: parameters.variables,
                        headers: parameters.headers,
