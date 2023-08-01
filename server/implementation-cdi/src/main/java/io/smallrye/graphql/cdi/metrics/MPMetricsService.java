@@ -28,6 +28,12 @@ public class MPMetricsService implements MetricsService {
     private static final String METRIC_NAME = "mp_graphql";
     private Logger LOG = Logger.getLogger(MPMetricsService.class);
 
+    public MPMetricsService() {
+        // If MP Metrics are not available, this will throw an exception
+        // and make sure that this service doesn't get registered
+        getMetricRegistry();
+    }
+
     private MetricRegistry getMetricRegistry() {
         if (metricRegistry == null) {
             this.metricRegistry = CDI.current().select(MetricRegistry.class, new VendorType()).get();

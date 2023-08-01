@@ -18,6 +18,12 @@ public class MicrometerMetricsService implements MetricsService {
     private static final String METRIC_NAME = "mp_graphql";
     private Logger LOG = Logger.getLogger(MicrometerMetricsService.class);
 
+    public MicrometerMetricsService() {
+        // If Micrometer is not available, this will throw an exception
+        // and make sure that this service doesn't get registered
+        meterRegistry.getMeters();
+    }
+
     private Tags getTags(MetricMeasurement metricMeasurement) {
         return Tags.of("name", metricMeasurement.getName())
                 .and("type", metricMeasurement.getOperationType())
