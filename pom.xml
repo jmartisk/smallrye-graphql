@@ -47,7 +47,7 @@
         <!-- Test -->
         <version.arquillian>1.8.0.Final</version.arquillian>
         <version.arquillian.jetty>2.0.0.Final</version.arquillian.jetty>
-        <version.jetty>11.0.15</version.jetty>
+        <version.jetty>12.0.14</version.jetty>
         <version.hibernate-validator>8.0.1.Final</version.hibernate-validator>
         <version.glasfish-el>4.0.2</version.glasfish-el>
         <version.weld-junit5>4.0.0.Final</version.weld-junit5>
@@ -372,7 +372,7 @@
             <!-- Tests -->
             <dependency>
                 <groupId>org.jboss.arquillian.container</groupId>
-                <artifactId>arquillian-jetty-embedded-11</artifactId>
+                <artifactId>arquillian-jetty-embedded-12-ee10</artifactId>
                 <version>${version.arquillian.jetty}</version>
                 <scope>test</scope>
             </dependency>
@@ -395,13 +395,13 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-jakarta-client</artifactId>
+                <artifactId>jetty-websocket-jetty-client</artifactId>
                 <version>${version.jetty}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>websocket-jakarta-server</artifactId>
+                <artifactId>jetty-websocket-jetty-server</artifactId>
                 <version>${version.jetty}</version>
                 <scope>test</scope>
             </dependency>
