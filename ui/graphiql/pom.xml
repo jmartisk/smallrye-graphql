@@ -15,8 +15,9 @@
     
     <properties>
         <path.graphiql>graphql-ui</path.graphiql>
-        <react.version>19.2.4</react.version>
+        <react.version>18.3.1</react.version>
         <graphiql.version>5.2.2</graphiql.version>
+        <react.compiler.version>1.0.0</react.compiler.version>
     </properties>
     
     <dependencies>
@@ -63,6 +64,18 @@
             <groupId>org.mvnpm</groupId>
             <artifactId>react-dom</artifactId>
             <version>${react.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.mvnpm</groupId>
+            <artifactId>react-compiler-runtime</artifactId>
+            <version>${react.compiler.version}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -119,7 +132,7 @@
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/META-INF/resources/${path.graphiql}/</outputDirectory>
-                                    <includes>**/graphiql.min.js, **/graphiql.min.js.map, **/graphiql.min.css, **/graphiql.min.css.map</includes>
+                                    <includes>**/GraphiQL.js, **/GraphiQL.js.map, **/graphiql.css</includes>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
                                     </fileMappers>
@@ -130,7 +143,19 @@
                                     <version>${react.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/classes/META-INF/resources/${path.graphiql}/</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/classes/META-INF/resources/${path.graphiql}/react</outputDirectory>
+                                    <includes>**/index.js, **/jsx-runtime.js</includes>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
+                                    </fileMappers>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.mvnpm</groupId>
+                                    <artifactId>react</artifactId>
+                                    <version>${react.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/META-INF/resources/${path.graphiql}/react/cjs</outputDirectory>
                                     <includes>**/react.production.min.js</includes>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
@@ -144,6 +169,18 @@
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/META-INF/resources/${path.graphiql}/</outputDirectory>
                                     <includes>**/react-dom.production.min.js</includes>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
+                                    </fileMappers>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.mvnpm</groupId>
+                                    <artifactId>react-compiler-runtime</artifactId>
+                                    <version>${react.compiler.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes/META-INF/resources/${path.graphiql}/react-compiler-runtime</outputDirectory>
+                                    <includes>**/index.js</includes>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.FlattenFileMapper />
                                     </fileMappers>

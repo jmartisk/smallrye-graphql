@@ -6,9 +6,17 @@
         <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
         <link rel="icon" href="favicon.ico" type="image/x-icon">
 
-        <script src="react.production.min.js"></script>
-        <script src="react-dom.production.min.js"></script>
-        <link href="graphiql.min.css" rel="stylesheet"/>
+        <script type="importmap">
+            {
+                "imports": {
+                    "react": "./react/index.js",
+                    "react/": "./react/",
+                    "react-dom": "./react-dom.production.min.js",
+                    "react-compiler-runtime": "./react-compiler-runtime/index.js"
+                }
+            }
+        </script>
+        <link href="graphiql.css" rel="stylesheet"/>
         <!-- NOTE: The following dependencies can be uncommented to include
          the GraphiQL plugin explorer in the project -->
 <!--        <link-->
@@ -21,8 +29,8 @@
         <div id="graphiql">Loading...</div>
 
         <script
-            src="graphiql.min.js"
-            type="application/javascript"
+            src="GraphiQL.js"
+            type="module"
         ></script>
         <!-- NOTE: The following dependencies can be uncommented to include
         the GraphiQL plugin explorer in the project -->
