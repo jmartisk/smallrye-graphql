@@ -9,14 +9,15 @@
         <script type="importmap">
             {
                 "imports": {
-                    "react": "./react/index.js",
-                    "react/": "./react/",
-                    "react-dom": "./react-dom.production.min.js",
-                    "react-compiler-runtime": "./react-compiler-runtime/index.js"
+                    "react": "./react/META-INF/resources/_static/react/index.js",
+                    "react/": "./react/META-INF/resources/_static/react/",
+                    "react-dom": "./react-dom/META-INF/resources/_static/react-dom/index.js",
+                    "react-compiler-runtime": "./react-compiler-runtime/META-INF/resources/_static/react-compiler-runtime/1.0.0/dist/index.js",
+                    "graphiql": "./graphiql/META-INF/resources/_static/graphiql/5.2.2/dist/index.js"
                 }
             }
         </script>
-        <link href="graphiql.css" rel="stylesheet"/>
+        <link href="graphiql/META-INF/resources/_static/graphiql/5.2.2/dist/graphiql.css" rel="stylesheet"/>
         <!-- NOTE: The following dependencies can be uncommented to include
          the GraphiQL plugin explorer in the project -->
 <!--        <link-->
@@ -28,10 +29,10 @@
     <body>
         <div id="graphiql">Loading...</div>
 
-        <script
-            src="GraphiQL.js"
-            type="module"
-        ></script>
+<!--        <script-->
+<!--            src="GraphiQL.js"-->
+<!--            type="module"-->
+<!--        ></script>-->
         <!-- NOTE: The following dependencies can be uncommented to include
         the GraphiQL plugin explorer in the project -->
 <!--        <script-->
